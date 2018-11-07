@@ -1,4 +1,4 @@
-# YAMPAMPER (Yet Another Messaging Protocol as an Mqtt wrappER) - ESP8266/ESP32 driver
+# YAMPAMPER (Yet Another Messaging Protocol As an Mqtt wrapPER) - ESP8266/ESP32 driver
 
 A simple messaging protocol built on top of MQTT. It provides subscriber and publisher functionality. You need to have a 3rd party MQTT broker like Mosquitto or Mosca.
 
