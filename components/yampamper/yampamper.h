@@ -50,7 +50,7 @@ typedef enum
 } yampamper_type_t;
 
 void y_publish(char *data);
-void y_connect(yampamper_type_t _type, Network *_network, char *mqtt_broker, int mqtt_port);
+int y_connect(yampamper_type_t _type, Network *_network, char *mqtt_broker, int mqtt_port);
 void y_subscribe(messageHandler messageHandler);
 
 #endif

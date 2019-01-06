@@ -22,4 +22,8 @@ config MQTT_PORT
     int "MQTT Port"
     default 1883
 
+config MQTT_TOPIC
+    string "MQTT Topic"
+    default "ESP8266/sample/pub"
+
 endmenu

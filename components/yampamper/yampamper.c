@@ -37,8 +37,6 @@ MQTTClient client;
 Network *network;
 unsigned char sendbuf[YAMPAMPER_MAX_MESSAGE_LEN + 50], readbuf[YAMPAMPER_MAX_MESSAGE_LEN + 50] = {0};
 
-#define TOPIC ("ESP8266/sample/pub")
-
 void uuid(char buf[UUID_LEN])
 {
   char c;
@@ -65,12 +63,12 @@ void uuid(char buf[UUID_LEN])
   buf[UUID_LEN - 1] = '\0';
 }
 
-void y_connect(yampamper_type_t _type, Network *_network, char *mqtt_broker, int mqtt_port)
+int y_connect(yampamper_type_t _type, Network *_network, char *mqtt_broker, int mqtt_port)
 {
   if (connected)
   {
     ESP_LOGE(TAG, "Already connected");
-    return;
+    return 0;
   }
   connected = true;
   type = _type;
@@ -85,6 +83,7 @@ void y_connect(yampamper_type_t _type, Network *_network, char *mqtt_broker, int
   if ((rc = NetworkConnect(network, address, mqtt_port)) != 0)
   {
     ESP_LOGI(TAG, "Return code from network connect is %d", rc);
+    return rc;
   }
 
 #if defined(MQTT_TASK)
@@ -92,6 +91,7 @@ void y_connect(yampamper_type_t _type, Network *_network, char *mqtt_broker, int
   if ((rc = MQTTStartTask(&client)) != pdPASS)
   {
     ESP_LOGE(TAG, "Return code from start tasks is %d", rc);
+    return rc;
   }
   else
   {
@@ -101,16 +101,19 @@ void y_connect(yampamper_type_t _type, Network *_network, char *mqtt_broker, int
 #endif
 
   connectData.MQTTVersion = 3;
-  connectData.clientID.cstring = "ESP8266_sample";
+  connectData.clientID.cstring = "ESP8266_yampamper";
 
   if ((rc = MQTTConnect(&client, &connectData)) != 0)
   {
     ESP_LOGE(TAG, "Return code from MQTT connect is %d", rc);
+    return rc;
   }
   else
   {
     ESP_LOGI(TAG, "MQTT Connected");
   }
+
+  return 0;
 }
 
 void y_to_str(char *data, char *str)
@@ -123,7 +126,7 @@ void y_to_str(char *data, char *str)
 
   snprintf(str,
            YAMPAMPER_MAX_MESSAGE_LEN,
-           "{\"data\":\"%s\",\"meta\":{\"counter\":%lu,\"clientId\":\"%s\"}}",
+           "{\"data\":%s,\"meta\":{\"counter\":%lu,\"clientId\":\"%s\"}}",
            data,
            (unsigned long)pub_counter,
            clientId);
@@ -143,13 +146,13 @@ void y_subscribe(messageHandler messageHandler)
   }
 
   int rc = 0;
-  if ((rc = MQTTSubscribe(&client, TOPIC, 2, messageHandler)) != 0)
+  if ((rc = MQTTSubscribe(&client, CONFIG_MQTT_TOPIC, 2, messageHandler)) != 0)
   {
     ESP_LOGE(TAG, "Return code from MQTT subscribe is %d", rc);
   }
   else
   {
-    ESP_LOGI(TAG, "MQTT subscribe to topic '%s'", TOPIC);
+    ESP_LOGI(TAG, "MQTT subscribe to topic '%s'", CONFIG_MQTT_TOPIC);
   }
 }
 
@@ -183,9 +186,9 @@ void y_publish(char *data)
   message.payloadlen = strlen(payload);
 
   int rc = 0;
-  if ((rc = MQTTPublish(&client, TOPIC, &message)) != 0)
+  if ((rc = MQTTPublish(&client, CONFIG_MQTT_TOPIC, &message)) != 0)
   {
     ESP_LOGE(TAG, "Return code from MQTT publish is %d", rc);
   }
-  ESP_LOGI(TAG, "Published '%s' on %s", (char *)message.payload, TOPIC);
+  ESP_LOGD(TAG, "Published '%s' on %s", (char *)message.payload, CONFIG_MQTT_TOPIC);
 }
